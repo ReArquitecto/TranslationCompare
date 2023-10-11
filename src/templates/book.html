@@ -1,0 +1,6 @@
+<h1>${book}</h1>
+<div class="sect">
+    <ul>
+        ${this.chapters.map(chapter => `<li><button class="chapter" data-chapter="${chapter}">${chapter}</button></li>`).join('')}
+    </ul>
+</div>
