@@ -10,4 +10,3 @@ Compare the nuances between different translations of the Bible.
 - `npm run start` starts up a local server and updates on any JS or CSS/SCSS changes.
 
 ## Web site domain
-https://curious-chaja-c0e19c.netlify.app/
