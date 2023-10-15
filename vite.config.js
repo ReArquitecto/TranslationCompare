@@ -1,11 +1,11 @@
 // import { resolve } from 'path';
-import { defineConfig } from 'vite';
+import { defineConfig } from "vite";
 
 export default defineConfig({
-  root: 'src/',
+  root: "src/",
   build: {
     rollupOptions: {
-      input: 'src/index.html',
+      input: "src/index.html",
     },
   },
 });

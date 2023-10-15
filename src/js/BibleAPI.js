@@ -1,7 +1,7 @@
 export default class BibleAPI {
   constructor(apiKey) {
     this.API_KEY = apiKey;
-    this.BASE_URL = 'https://api.scripture.api.bible/v1/';
+    this.BASE_URL = "https://api.scripture.api.bible/v1/";
     this.TIMEOUT = 5000; // Set a timeout of 5 seconds (adjust as needed).
   }
 
@@ -12,11 +12,11 @@ export default class BibleAPI {
       const response = await Promise.race([
         fetch(url.toString(), {
           headers: {
-            'api-key': this.API_KEY,
+            "api-key": this.API_KEY,
           },
         }),
         new Promise((_, reject) =>
-          setTimeout(() => reject(new Error('Request timeout')), this.TIMEOUT)
+          setTimeout(() => reject(new Error("Request timeout")), this.TIMEOUT)
         ),
       ]);
 
@@ -26,7 +26,7 @@ export default class BibleAPI {
 
       return response.json();
     } catch (error) {
-      console.error('Error making request:', error);
+      console.error("Error making request:", error);
       throw error;
     }
   }
@@ -50,7 +50,7 @@ export default class BibleAPI {
   }
 
   async getBibleVersions() {
-    const endpoint = '/bibles';
+    const endpoint = "/bibles";
     const data = await this.makeRequest(endpoint);
     return data.map(({ name, id, abbreviation, description, language }) => ({
       name,
@@ -83,7 +83,7 @@ export default class BibleAPI {
 
       return finalData;
     } catch (error) {
-      console.error('Error fetching Bible data:', error);
+      console.error("Error fetching Bible data:", error);
       return {}; // Return an empty object or handle the error as needed.
     }
   }
@@ -160,7 +160,7 @@ export default class BibleAPI {
           3: 18,
           4: 22,
         },
-        '1 Samuel': {
+        "1 Samuel": {
           1: 28,
           2: 36,
           3: 21,
@@ -169,7 +169,7 @@ export default class BibleAPI {
           6: 21,
           7: 17,
         },
-        '2 Samuel': {
+        "2 Samuel": {
           1: 27,
           2: 32,
           3: 39,
@@ -178,7 +178,7 @@ export default class BibleAPI {
           6: 23,
           7: 29,
         },
-        '1 Kings': {
+        "1 Kings": {
           1: 53,
           2: 46,
           3: 28,
@@ -187,7 +187,7 @@ export default class BibleAPI {
           6: 38,
           7: 51,
         },
-        '2 Kings': {
+        "2 Kings": {
           1: 18,
           2: 25,
           3: 27,
@@ -253,7 +253,7 @@ export default class BibleAPI {
           7: 25,
         },
       },
-      Translations: ['NIV', 'KJV', 'ESV', 'NLT', 'MSG'],
+      Translations: ["NIV", "KJV", "ESV", "NLT", "MSG"],
     };
   }
 }

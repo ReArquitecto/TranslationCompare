@@ -1,8 +1,8 @@
-import BibleAPI from './BibleAPI.js';
+import BibleAPI from "./BibleAPI.js";
 
 class BibleNavigator {
   constructor() {
-    this.apiKey = 'd42753bd397e6f90fcaaa710a6dbfbdf';
+    this.apiKey = "d42753bd397e6f90fcaaa710a6dbfbdf";
 
     // switch between mock data and api data
     this.BibleAPI = new BibleAPI(this.apiKey);
@@ -10,8 +10,8 @@ class BibleNavigator {
     // this.bibleData = this.LoadBibleData(this.apiKey);
     console.log(JSON.stringify(this.bibleData, null, 2));
 
-    this.appContent = document.getElementById('app-content');
-    this.breadcrumbElement = document.getElementById('breadcrumb');
+    this.appContent = document.getElementById("app-content");
+    this.breadcrumbElement = document.getElementById("breadcrumb");
     this.bindNavigation();
 
     this.bindEvents();
@@ -19,20 +19,20 @@ class BibleNavigator {
   }
 
   bindNavigation() {
-    window.addEventListener('popstate', () => this.navigateByURL());
+    window.addEventListener("popstate", () => this.navigateByURL());
   }
 
   async LoadBibleData() {
     try {
       const api = new BibleAPI(this.apiKey);
-      const bibleVersionID = 'de4e12af7f28f599-02';
+      const bibleVersionID = "de4e12af7f28f599-02";
 
       // Call the getAllData method and get the result.
       const data = await api.getAllData(bibleVersionID);
 
       console.log(JSON.stringify(data, null, 2)); // pretty print the data
     } catch (error) {
-      console.error('Error:', error);
+      console.error("Error:", error);
     }
   }
 
@@ -63,26 +63,26 @@ class BibleNavigator {
     return book
       .toLowerCase()
       .replace(/\b[a-z]/g, (char) => char.toUpperCase())
-      .replace(/\s/g, '-');
+      .replace(/\s/g, "-");
   }
   unformatBook(book) {
     if (!book) return null;
     // replace dash with space
-    return book.replace(/-/g, ' ');
+    return book.replace(/-/g, " ");
   }
 
   updatePath(book, chapter, verse) {
     book = this.formatBook(book) || null;
-    console.log('!updatePath', book, chapter, verse);
+    console.log("!updatePath", book, chapter, verse);
     console.log(book, chapter, verse);
     if (book && chapter && verse) {
-      window.history.pushState({}, '', `/${book}/${chapter}/${verse}`);
+      window.history.pushState({}, "", `/${book}/${chapter}/${verse}`);
     } else if (book && chapter) {
-      window.history.pushState({}, '', `/${book}/${chapter}`);
+      window.history.pushState({}, "", `/${book}/${chapter}`);
     } else if (book) {
-      window.history.pushState({}, '', `/${book}`);
+      window.history.pushState({}, "", `/${book}`);
     } else {
-      window.history.pushState({}, '', `/`);
+      window.history.pushState({}, "", `/`);
     }
   }
 
@@ -101,7 +101,7 @@ class BibleNavigator {
               (book) =>
                 `<li><button class="book" data-book="${book}">${book}</button></li>`
             )
-            .join('')}
+            .join("")}
         </ul>
         </div>
         
@@ -113,7 +113,7 @@ class BibleNavigator {
               (book) =>
                 `<li><button class="book" data-book="${book}">${book}</button></li>`
             )
-            .join('')}
+            .join("")}
         </ul>
         </div>
       </div>`;
@@ -138,7 +138,7 @@ class BibleNavigator {
     this.updatePath(book);
     this.updateBreadcrumb();
     this.chapters = Object.keys(this.bibleData[testament][book]);
-    console.log('chapters', this.chapters);
+    console.log("chapters", this.chapters);
     const content = `
       <div class="sect sect-grid">
       <h2>${book}</h2>
@@ -148,7 +148,7 @@ class BibleNavigator {
             (chapter) =>
               `<li><button class="chapter" data-chapter="${chapter}">${chapter}</button></li>`
           )
-          .join('')}
+          .join("")}
       </ul>
       </div>`;
     this.appContent.innerHTML = content;
@@ -162,7 +162,7 @@ class BibleNavigator {
     const totalVerses = this.bibleData[testament][book][chapter];
     this.verses = Array.from({ length: totalVerses }, (_, i) => i + 1);
 
-    console.log('verses', this.verses);
+    console.log("verses", this.verses);
     const content = `
       <div class="sect sect-grid">
       <h2>${book} Chapter ${chapter}</h2>
@@ -173,7 +173,7 @@ class BibleNavigator {
             (verse) =>
               `<li><button class="verse" data-verse="${verse}">${verse}</button></li>`
           )
-          .join('')}
+          .join("")}
       </ul>
       </div>`;
     this.appContent.innerHTML = content;
@@ -188,49 +188,52 @@ class BibleNavigator {
       <ul>
         ${this.bibleData.Translations.map(
           (translation) => `<li>${translation}: ${verse}</li>`
-        ).join('')}      
+        ).join("")}      
       </ul>
       </div>`;
     this.appContent.innerHTML = content;
   }
 
   loadPageNotFound() {
-    this.appContent.innerHTML = '<h2>Page not found</h2>';
+    this.appContent.innerHTML = "<h2>Page not found</h2>";
   }
 
   updateBreadcrumb() {
-    console.log('updateBreadcrumb!!!!!!!!');
+    console.log("updateBreadcrumb!!!!!!!!");
     let { book, chapter, verse } = this.getURLParams();
     const parts = [book, chapter, verse].filter(Boolean);
     book = this.formatBook(book) || null;
-    parts.unshift('Home');
+    parts.unshift("Home");
     const breadcrumb = parts
-      .map((part, index) => `<li><a href="#" data-index="${index}">${part}</a></li>`)
-      .join('');
+      .map(
+        (part, index) =>
+          `<li><a href="#" data-index="${index}">${part}</a></li>`
+      )
+      .join("");
     this.breadcrumbElement.innerHTML = breadcrumb;
   }
 
   bindEvents() {
-    this.breadcrumbElement.addEventListener('click', (e) =>
+    this.breadcrumbElement.addEventListener("click", (e) =>
       this.handleBreadcrumbClick(e)
     );
-    this.appContent.addEventListener('click', (e) =>
+    this.appContent.addEventListener("click", (e) =>
       this.handleContentClick(e)
     );
   }
 
   getTestament(book) {
     if (this.bibleData.OldTestament[book]) {
-      return 'OldTestament';
+      return "OldTestament";
     } else if (this.bibleData.NewTestament[book]) {
-      return 'NewTestament';
+      return "NewTestament";
     } else {
       return null;
     }
   }
 
   getURLParams() {
-    const pathSegments = window.location.pathname.split('/').filter(Boolean); // split by "/" and remove any empty parts
+    const pathSegments = window.location.pathname.split("/").filter(Boolean); // split by "/" and remove any empty parts
 
     return {
       book: pathSegments[0] || null,
@@ -246,13 +249,13 @@ class BibleNavigator {
     // Redirect to home page if the book, chapter, or verse does not exist.
     if (!book) {
       this.loadHomePage();
-      console.log('book not found');
+      console.log("book not found");
     } else if (book && !testament) {
       this.loadHomePage();
-      console.log('book not found');
+      console.log("book not found");
     } else if (book && chapter && !this.bibleData[testament][book][chapter]) {
       this.loadChaptersPage(book);
-      console.log('chapter not found');
+      console.log("chapter not found");
     } else if (
       book &&
       chapter &&
@@ -260,7 +263,7 @@ class BibleNavigator {
       !this.bibleData[testament][book][chapter][verse]
     ) {
       this.loadVersesPage(book, chapter);
-      console.log('verse not found');
+      console.log("verse not found");
     }
   }
 
@@ -268,14 +271,14 @@ class BibleNavigator {
     let { book, chapter, verse } = this.getURLParams();
     book = this.unformatBook(book) || null;
 
-    if (e.target.classList.contains('book')) {
+    if (e.target.classList.contains("book")) {
       const selectedBook = e.target.dataset.book;
       this.loadChaptersPage(selectedBook);
-    } else if (e.target.classList.contains('chapter')) {
+    } else if (e.target.classList.contains("chapter")) {
       const selectedChapter = e.target.dataset.chapter;
       this.loadVersesPage(book, selectedChapter);
-    } else if (e.target.classList.contains('verse')) {
-      console.log('verse selected!');
+    } else if (e.target.classList.contains("verse")) {
+      console.log("verse selected!");
       const selectedVerse = e.target.dataset.verse;
       console.log(selectedVerse);
       this.loadTranslationPage(book, chapter, selectedVerse);
