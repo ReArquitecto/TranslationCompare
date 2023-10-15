@@ -1,25 +1,19 @@
 <div class="flex-sect">
-    <div class="sect sect-grid3">
+  <div class="sect sect-grid3">
     <h2>Old Testament</h2>
     <ul>
-      ${this.oldTestamentBooks
-        .map(
-          (book) =>
-            `<li><button class="book" data-book="${book}">${book}</button></li>`
-        )
-        .join("")}
+      ${this.oldTestamentBooks .map( (book) => `
+      <li><button class="book" data-book="${book}">${book}</button></li>
+      ` ) .join("")}
     </ul>
-    </div>
-    
-    <div class="sect sect-grid3">
+  </div>
+
+  <div class="sect sect-grid3">
     <h2>New Testament</h2>
     <ul>
-      ${this.newTestamentBooks
-        .map(
-          (book) =>
-            `<li><button class="book" data-book="${book}">${book}</button></li>`
-        )
-        .join("")}
+      ${this.newTestamentBooks .map( (book) => `
+      <li><button class="book" data-book="${book}">${book}</button></li>
+      ` ) .join("")}
     </ul>
-    </div>
+  </div>
 </div>

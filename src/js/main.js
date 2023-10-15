@@ -1,5 +1,5 @@
-import BibleNavigator from "./navigator.js";
+import BibleNavigator from './navigator.js';
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener('DOMContentLoaded', () => {
   new BibleNavigator();
 });

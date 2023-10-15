@@ -1,9 +1,9 @@
 export function navigate(navigationFunctions = {}) {
   const params = new URLSearchParams(window.location.search);
 
-  const book = params.get("name");
-  const chapter = params.get("chapter");
-  const verse = params.get("verse");
+  const book = params.get('name');
+  const chapter = params.get('chapter');
+  const verse = params.get('verse');
 
   if (book && chapter && verse && navigationFunctions.loadVersePage) {
     navigationFunctions.loadVersePage(book, chapter, verse);
