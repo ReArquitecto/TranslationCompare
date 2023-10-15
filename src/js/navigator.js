@@ -39,11 +39,12 @@ class BibleNavigator {
 
   navigateByURL() {
     let { book, chapter, verse } = this.getURLParams();
-    book = book ? book.toLowerCase() : null;
+    book = this.formatBook(book) || null;
     const testament = this.getTestament(book);
     console.log(book, chapter, verse);
     this.redirectIfInvalid();
 
+    book = this.unformatBook(book) || null;
     if (book && chapter && verse) {
       this.loadTranslationPage(book, chapter, verse);
     } else if (book && chapter) {
@@ -55,7 +56,25 @@ class BibleNavigator {
     }
   }
 
+  formatBook(book) {
+    if (!book) return null;
+    // lowercase all characters
+    // capitalize first letter of each word
+    // replace space with dash
+    return book
+      .toLowerCase()
+      .replace(/\b[a-z]/g, (char) => char.toUpperCase())
+      .replace(/\s/g, "-");
+  }
+  unformatBook(book) {
+    if (!book) return null;
+    // replace dash with space
+    return book.replace(/-/g, " ");
+  }
+
   updatePath(book, chapter, verse) {
+    book = this.formatBook(book) || null;
+    console.log("!updatePath", book, chapter, verse);
     console.log(book, chapter, verse);
     if (book && chapter && verse) {
       window.history.pushState({}, "", `/${book}/${chapter}/${verse}`);
@@ -71,8 +90,8 @@ class BibleNavigator {
   loadHomePage() {
     this.updateBreadcrumb();
     this.updatePath();
-    this.newTestamentBooks = Object.keys(this.bibleData.newtestament);
-    this.oldTestamentBooks = Object.keys(this.bibleData.oldtestament);
+    this.newTestamentBooks = Object.keys(this.bibleData.NewTestament);
+    this.oldTestamentBooks = Object.keys(this.bibleData.OldTestament);
     const content = `
       <div class="flex-sect">
         <div class="sect sect-grid3">
@@ -100,6 +119,8 @@ class BibleNavigator {
         </div>
       </div>`;
     this.appContent.innerHTML = content;
+    this.updateBreadcrumb();
+    // this.updatePath();
   }
 
   loadChaptersPage(book) {
@@ -177,8 +198,10 @@ class BibleNavigator {
   }
 
   updateBreadcrumb() {
-    const { book, chapter, verse } = this.getURLParams();
+    console.log("updateBreadcrumb!!!!!!!!");
+    let { book, chapter, verse } = this.getURLParams();
     const parts = [book, chapter, verse].filter(Boolean);
+    book = this.formatBook(book) || null;
     parts.unshift("Home");
     const breadcrumb = parts
       .map((part, index) => {
@@ -198,10 +221,10 @@ class BibleNavigator {
   }
 
   getTestament(book) {
-    if (this.bibleData.oldtestament[book]) {
-      return "oldtestament";
-    } else if (this.bibleData.newtestament[book]) {
-      return "newtestament";
+    if (this.bibleData.OldTestament[book]) {
+      return "OldTestament";
+    } else if (this.bibleData.NewTestament[book]) {
+      return "NewTestament";
     } else {
       return null;
     }
@@ -218,7 +241,7 @@ class BibleNavigator {
   }
 
   redirectIfInvalid() {
-    const { book, chapter, verse } = this.getURLParams();
+    let { book, chapter, verse } = this.getURLParams();
     const testament = this.getTestament(book);
 
     // Redirect to home page if the book, chapter, or verse does not exist.
@@ -243,7 +266,8 @@ class BibleNavigator {
   }
 
   handleContentClick(e) {
-    const { book, chapter, verse } = this.getURLParams();
+    let { book, chapter, verse } = this.getURLParams();
+    book = this.unformatBook(book) || null;
 
     if (e.target.classList.contains("book")) {
       const selectedBook = e.target.dataset.book;
@@ -263,7 +287,8 @@ class BibleNavigator {
     e.preventDefault();
     const index = e.target.dataset.index;
     const parts = [null, null, null];
-    const { book, chapter, verse } = this.getURLParams();
+    let { book, chapter, verse } = this.getURLParams();
+    book = this.unformatBook(book) || null;
 
     parts[index] = null;
     if (index == 0) {

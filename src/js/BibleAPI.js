@@ -90,8 +90,8 @@ export default class BibleAPI {
 
   LoadMockData() {
     return {
-      oldtestament: {
-        genesis: {
+      OldTestament: {
+        Genesis: {
           1: 31,
           2: 25,
           3: 24,
@@ -100,7 +100,7 @@ export default class BibleAPI {
           6: 22,
           7: 24,
         },
-        exodus: {
+        Exodus: {
           1: 22,
           2: 25,
           3: 22,
@@ -109,7 +109,7 @@ export default class BibleAPI {
           6: 30,
           7: 25,
         },
-        leviticus: {
+        Leviticus: {
           1: 17,
           2: 16,
           3: 17,
@@ -118,7 +118,7 @@ export default class BibleAPI {
           6: 30,
           7: 38,
         },
-        numbers: {
+        Numbers: {
           1: 54,
           2: 34,
           3: 51,
@@ -127,7 +127,7 @@ export default class BibleAPI {
           6: 27,
           7: 89,
         },
-        deuteronomy: {
+        Deuteronomy: {
           1: 46,
           2: 37,
           3: 29,
@@ -136,7 +136,7 @@ export default class BibleAPI {
           6: 25,
           7: 26,
         },
-        joshua: {
+        Joshua: {
           1: 18,
           2: 24,
           3: 17,
@@ -145,7 +145,7 @@ export default class BibleAPI {
           6: 27,
           7: 26,
         },
-        judges: {
+        Judges: {
           1: 36,
           2: 23,
           3: 31,
@@ -154,13 +154,13 @@ export default class BibleAPI {
           6: 40,
           7: 25,
         },
-        ruth: {
+        Ruth: {
           1: 22,
           2: 23,
           3: 18,
           4: 22,
         },
-        "1 samuel": {
+        "1 Samuel": {
           1: 28,
           2: 36,
           3: 21,
@@ -169,7 +169,7 @@ export default class BibleAPI {
           6: 21,
           7: 17,
         },
-        "2 samuel": {
+        "2 Samuel": {
           1: 27,
           2: 32,
           3: 39,
@@ -178,7 +178,7 @@ export default class BibleAPI {
           6: 23,
           7: 29,
         },
-        "1 kings": {
+        "1 Kings": {
           1: 53,
           2: 46,
           3: 28,
@@ -187,7 +187,7 @@ export default class BibleAPI {
           6: 38,
           7: 51,
         },
-        "2 kings": {
+        "2 Kings": {
           1: 18,
           2: 25,
           3: 27,
@@ -197,8 +197,8 @@ export default class BibleAPI {
           7: 20,
         },
       },
-      newtestament: {
-        matthew: {
+      NewTestament: {
+        Matthew: {
           1: 25,
           2: 23,
           3: 17,
@@ -207,7 +207,7 @@ export default class BibleAPI {
           6: 34,
           7: 29,
         },
-        mark: {
+        Mark: {
           1: 45,
           2: 28,
           3: 35,
@@ -216,7 +216,7 @@ export default class BibleAPI {
           6: 56,
           7: 37,
         },
-        luke: {
+        Luke: {
           1: 80,
           2: 52,
           3: 38,
@@ -225,7 +225,7 @@ export default class BibleAPI {
           6: 49,
           7: 50,
         },
-        john: {
+        John: {
           1: 51,
           2: 25,
           3: 36,
@@ -234,7 +234,7 @@ export default class BibleAPI {
           6: 71,
           7: 53,
         },
-        acts: {
+        Acts: {
           1: 26,
           2: 47,
           3: 26,
@@ -243,7 +243,7 @@ export default class BibleAPI {
           6: 15,
           7: 60,
         },
-        romans: {
+        Romans: {
           1: 32,
           2: 29,
           3: 31,
@@ -253,7 +253,7 @@ export default class BibleAPI {
           7: 25,
         },
       },
-      translations: ["NIV", "KJV", "ESV", "NLT", "MSG"],
+      Translations: ["NIV", "KJV", "ESV", "NLT", "MSG"],
     };
   }
 }
