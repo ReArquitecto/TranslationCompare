@@ -6,8 +6,8 @@ class BibleNavigator {
 
     // switch between mock data and api data
     this.BibleAPI = new BibleAPI(this.apiKey);
-    this.bibleData = this.BibleAPI.LoadMockData();
-    // this.bibleData = this.LoadBibleData(this.apiKey);
+    // this.bibleData = this.BibleAPI.LoadMockData();
+    this.bibleData = this.BibleAPI.LoadBibleData();
     console.log(JSON.stringify(this.bibleData, null, 2));
 
     this.appContent = document.getElementById("app-content");
@@ -20,20 +20,6 @@ class BibleNavigator {
 
   bindNavigation() {
     window.addEventListener("popstate", () => this.navigateByURL());
-  }
-
-  async LoadBibleData() {
-    try {
-      const api = new BibleAPI(this.apiKey);
-      const bibleVersionID = "de4e12af7f28f599-02";
-
-      // Call the getAllData method and get the result.
-      const data = await api.getAllData(bibleVersionID);
-
-      console.log(JSON.stringify(data, null, 2)); // pretty print the data
-    } catch (error) {
-      console.error("Error:", error);
-    }
   }
 
   navigateByURL() {
@@ -94,7 +80,7 @@ class BibleNavigator {
     const content = `
       <div class="flex-sect">
         <div class="sect sect-grid3">
-        <h2>Old Testament</h2>
+        <h1>Old Testament</h1>
         <ul>
           ${this.oldTestamentBooks
             .map(
@@ -106,7 +92,7 @@ class BibleNavigator {
         </div>
         
         <div class="sect sect-grid3">
-        <h2>New Testament</h2>
+        <h1>New Testament</h1>
         <ul>
           ${this.newTestamentBooks
             .map(
@@ -137,11 +123,11 @@ class BibleNavigator {
     }
     this.updatePath(book);
     this.updateBreadcrumb();
-    this.chapters = Object.keys(this.bibleData[testament][book]);
+    this.chapters = Object.keys(this.bibleData[testament][book].chapters);
     console.log("chapters", this.chapters);
     const content = `
       <div class="sect sect-grid">
-      <h2>${book}</h2>
+      <h1>${book}</h1>
       <ul>
         ${this.chapters
           .map(
@@ -159,13 +145,13 @@ class BibleNavigator {
     this.updatePath(book, chapter);
     this.updateBreadcrumb();
 
-    const totalVerses = this.bibleData[testament][book][chapter];
+    const totalVerses = this.bibleData[testament][book].chapters[chapter];
     this.verses = Array.from({ length: totalVerses }, (_, i) => i + 1);
 
     console.log("verses", this.verses);
     const content = `
       <div class="sect sect-grid">
-      <h2>${book} Chapter ${chapter}</h2>
+      <h1>${book} Chapter ${chapter}</h1>
       
       <ul>
         ${this.verses
@@ -184,19 +170,47 @@ class BibleNavigator {
     this.updateBreadcrumb();
     const content = `
       <div class="sect sect-translation">
-      <h2>Translations for: ${book} Chapter ${chapter}:${verse}</h2>
-      <ul>
-        ${this.bibleData.Translations.map(
-          (translation) => `<li>${translation}: ${verse}</li>`
-        ).join("")}      
-      </ul>
+        <h1>${book} Chapter ${chapter}:${verse}</h1>
+        <div class="translations">
+          <div class="">
+            <select id="t-select-1"></select>
+            <div id="t-content-1"></div>
+          </div>
+          <div class="">
+            <select id="t-select-2"></select>
+            <div id="t-content-2"></div>
+          </div>
+          <div class="">
+            <select id="t-select-3"></select>
+            <div id="t-content-3"></div>
+          </div>
+        </div>
       </div>`;
     this.appContent.innerHTML = content;
+    this.BibleAPI.populateTranslations();
+    this.attachTranslationEventListeners(book, chapter, verse);
   }
 
   loadPageNotFound() {
-    this.appContent.innerHTML = "<h2>Page not found</h2>";
+    this.appContent.innerHTML = "<h1>Page not found</h1>";
   }
+
+  attachTranslationEventListeners(book, chapter, verse) {
+    const dropdowns = ['t-select-1', 't-select-2', 't-select-3'].map(id => document.getElementById(id));
+    const contentDivs = ['t-content-1', 't-content-2', 't-content-3'].map(id => document.getElementById(id));
+
+    dropdowns.forEach((dropdown, index) => {
+        dropdown.addEventListener('change', async () => {
+            const bibleId = dropdown.value;
+            const content = await this.BibleAPI.fetchVerseContent(bibleId, book, chapter, verse);
+            contentDivs[index].innerHTML = content;
+
+            // Update local storage to save the selected dropdown values
+            const selectedBibleIds = dropdowns.map(dropdown => dropdown.value);
+            localStorage.setItem('selectedBibleIds', JSON.stringify(selectedBibleIds));
+        });
+    });
+}
 
   updateBreadcrumb() {
     console.log("updateBreadcrumb!!!!!!!!");
