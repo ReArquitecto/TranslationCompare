@@ -8,7 +8,7 @@ class BibleNavigator {
     this.BibleAPI = new BibleAPI(this.apiKey);
     // this.bibleData = this.BibleAPI.LoadMockData();
     this.bibleData = this.BibleAPI.LoadBibleData();
-    console.log(JSON.stringify(this.bibleData, null, 2));
+    console.log('test', this.bibleData)
 
     this.appContent = document.getElementById("app-content");
     this.breadcrumbElement = document.getElementById("breadcrumb");
@@ -26,7 +26,6 @@ class BibleNavigator {
     let { book, chapter, verse } = this.getURLParams();
     book = this.formatBook(book) || null;
     const testament = this.getTestament(book);
-    console.log(book, chapter, verse);
     this.redirectIfInvalid();
 
     book = this.unformatBook(book) || null;
@@ -59,8 +58,6 @@ class BibleNavigator {
 
   updatePath(book, chapter, verse) {
     book = this.formatBook(book) || null;
-    console.log("!updatePath", book, chapter, verse);
-    console.log(book, chapter, verse);
     if (book && chapter && verse) {
       window.history.pushState({}, "", `/${book}/${chapter}/${verse}`);
     } else if (book && chapter) {
@@ -124,7 +121,6 @@ class BibleNavigator {
     this.updatePath(book);
     this.updateBreadcrumb();
     this.chapters = Object.keys(this.bibleData[testament][book].chapters);
-    console.log("chapters", this.chapters);
     const content = `
       <div class="sect sect-grid">
       <h1>${book}</h1>
@@ -148,7 +144,6 @@ class BibleNavigator {
     const totalVerses = this.bibleData[testament][book].chapters[chapter];
     this.verses = Array.from({ length: totalVerses }, (_, i) => i + 1);
 
-    console.log("verses", this.verses);
     const content = `
       <div class="sect sect-grid">
       <h1>${book} Chapter ${chapter}</h1>
@@ -165,55 +160,121 @@ class BibleNavigator {
     this.appContent.innerHTML = content;
   }
 
-  loadTranslationPage(book, chapter, verse) {
+  async loadTranslationPage(book, chapter, verse) {
     this.updatePath(book, chapter, verse);
     this.updateBreadcrumb();
     const content = `
       <div class="sect sect-translation">
         <h1>${book} Chapter ${chapter}:${verse}</h1>
+        <div class="info"><img src="/img/info.svg" alt="info icon" class="info-icon"><p>Translation Info<p></div>
+        <div class="hidden gray">
+          <p>Some Popular Bibles not included:
+          <ul id="bibles-not-included">
+            <li>- New International Version (NIV)</li>
+            <li>- English Standard Version (ESV)</li>
+            <li>- New Living Translation (NLT)</li>
+            <li>- New King James Version (NKJV)</li>
+            <li>- Christian Standard Bible (CSB)</li>
+          <ul>
+        </div>  
         <div class="translations">
           <div class="">
             <select id="t-select-1"></select>
-            <div id="t-content-1"></div>
+            <div id="t-content-1" class="scripture-styles">Loading...</div>
           </div>
           <div class="">
             <select id="t-select-2"></select>
-            <div id="t-content-2"></div>
+            <div id="t-content-2" class="scripture-styles">Loading...</div>
           </div>
           <div class="">
             <select id="t-select-3"></select>
-            <div id="t-content-3"></div>
+            <div id="t-content-3" class="scripture-styles">Loading...</div>
           </div>
         </div>
       </div>`;
     this.appContent.innerHTML = content;
-    this.BibleAPI.populateTranslations();
+    try {
+      await this.BibleAPI.populateTranslations();
+    }
+    catch (error) {
+      console.log('Sequence error: ', error);
+    }
+    await this.loadDropdownDefaultValues();
     this.attachTranslationEventListeners(book, chapter, verse);
+
+    // Populate content for each translation
+    const dropdowns = ['t-select-1', 't-select-2', 't-select-3'].map(id => document.getElementById(id));
+    const contentDivs = ['t-content-1', 't-content-2', 't-content-3'].map(id => document.getElementById(id));
+    dropdowns.forEach((dropdown, index) => {
+        this.updateIndividualTranslation(dropdown, contentDivs[index], book, chapter, verse);
+    });
+
+    // get p with class of hidden, remove hidden class when element of class .info is clicked
+    const info = document.querySelector('.info');
+    const hidden = document.querySelector('.hidden');
+    info.addEventListener('click', () => {
+      if (hidden.classList.contains('hidden')) {
+        hidden.classList.remove('hidden');
+      } else {
+        hidden.classList.add('hidden');
+      }
+    });
   }
 
   loadPageNotFound() {
     this.appContent.innerHTML = "<h1>Page not found</h1>";
   }
 
-  attachTranslationEventListeners(book, chapter, verse) {
+  async loadDropdownDefaultValues() {
+    const dropdowns = ['t-select-1', 't-select-2', 't-select-3'].map(id => document.getElementById(id));
+
+    // Change the selections to stored values if they exist
+    const storedBibleIds = await JSON.parse(localStorage.getItem('storedBibleIds'));
+    if (storedBibleIds) {
+        dropdowns.forEach((dropdown, index) => {
+            dropdown.value = storedBibleIds[index];
+        });
+    }
+
+    // Change the seelections to "King James (Authorized) Version", "World English Bible", and "Douay-Rheims American 1899" if no stored values exist
+    else {
+        dropdowns[0].value = 'de4e12af7f28f599-02';
+        dropdowns[1].value = '9879dbb7cfe39e4d-04';
+        dropdowns[2].value = '179568874c45066f-01';
+    }
+  }
+
+  getBookID(book) {
+    const testament = this.getTestament(book);
+    return this.bibleData[testament][book].id;
+  }
+
+  updateIndividualTranslation(dropdown, contentDiv, book, chapter, verse) {
+    const bibleId = dropdown.value;
+    const bookId = this.getBookID(book);
+    this.BibleAPI.fetchTranslationContent(bibleId, bookId, book, chapter, verse)
+        .then(content => {
+            contentDiv.innerHTML = '';
+            contentDiv.appendChild(content);
+        });
+  }
+
+  async attachTranslationEventListeners(book, chapter, verse) {
     const dropdowns = ['t-select-1', 't-select-2', 't-select-3'].map(id => document.getElementById(id));
     const contentDivs = ['t-content-1', 't-content-2', 't-content-3'].map(id => document.getElementById(id));
 
     dropdowns.forEach((dropdown, index) => {
         dropdown.addEventListener('change', async () => {
-            const bibleId = dropdown.value;
-            const content = await this.BibleAPI.fetchVerseContent(bibleId, book, chapter, verse);
-            contentDivs[index].innerHTML = content;
+            await this.updateIndividualTranslation(dropdown, contentDivs[index], book, chapter, verse);
 
             // Update local storage to save the selected dropdown values
-            const selectedBibleIds = dropdowns.map(dropdown => dropdown.value);
-            localStorage.setItem('selectedBibleIds', JSON.stringify(selectedBibleIds));
+            const selectedBibleIds = await dropdowns.map(dropdown => dropdown.value);
+            localStorage.setItem('storedBibleIds', JSON.stringify(selectedBibleIds));
         });
     });
 }
 
   updateBreadcrumb() {
-    console.log("updateBreadcrumb!!!!!!!!");
     let { book, chapter, verse } = this.getURLParams();
     const parts = [book, chapter, verse].filter(Boolean);
     book = this.formatBook(book) || null;
@@ -263,13 +324,10 @@ class BibleNavigator {
     // Redirect to home page if the book, chapter, or verse does not exist.
     if (!book) {
       this.loadHomePage();
-      console.log("book not found");
     } else if (book && !testament) {
       this.loadHomePage();
-      console.log("book not found");
     } else if (book && chapter && !this.bibleData[testament][book][chapter]) {
       this.loadChaptersPage(book);
-      console.log("chapter not found");
     } else if (
       book &&
       chapter &&
@@ -277,7 +335,6 @@ class BibleNavigator {
       !this.bibleData[testament][book][chapter][verse]
     ) {
       this.loadVersesPage(book, chapter);
-      console.log("verse not found");
     }
   }
 
@@ -292,9 +349,7 @@ class BibleNavigator {
       const selectedChapter = e.target.dataset.chapter;
       this.loadVersesPage(book, selectedChapter);
     } else if (e.target.classList.contains("verse")) {
-      console.log("verse selected!");
       const selectedVerse = e.target.dataset.verse;
-      console.log(selectedVerse);
       this.loadTranslationPage(book, chapter, selectedVerse);
     }
   }

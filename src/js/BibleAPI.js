@@ -7,25 +7,23 @@ export default class BibleAPI {
   }
 
   async makeRequest(endpoint) {
-    const url = new URL(endpoint, this.BASE_URL);
+
+    const url = `${this.BASE_URL}${endpoint}`;
 
     try {
-      const response = await Promise.race([
-        fetch(url.toString(), {
-          headers: {
-            "api-key": this.API_KEY,
-          },
-        }),
-        new Promise((_, reject) =>
-          setTimeout(() => reject(new Error("Request timeout")), this.TIMEOUT)
-        ),
-      ]);
+      const response = await fetch(url, {
+        headers: {
+          "API-Key": this.API_KEY,
+        },
+      });
 
       if (!response.ok) {
-        throw new Error(`Request failed with status ${response.status}`);
+        throw new Error(`Request failed with status code ${response.status}`);
       }
 
-      return response.json();
+      const data = await response.json();
+
+      return data;
     } catch (error) {
       console.error("Error making request:", error);
       throw error;
@@ -44,22 +42,35 @@ export default class BibleAPI {
     return Bible_Books;
   }
 
-  async addBookData(Bible_Books) {
-    // Endpoint to fetch book details
-    const endpoint = `/bibles/${this.BibleVersionID}/books`;
-  
+  async addBookData(Bible_Books) {  
     try {
-      const response = await this.makeRequest(endpoint);
-      const apiBooks = response.data; // Get the 'data' field from the response.
-  
-      // Iterate over all books returned from the API
-      for (const apiBook of apiBooks) {
-        // Check if the book is in the Old Testament or New Testament
-        const testament = Bible_Books.OldTestament.includes(apiBook.name) ? 'OldTestament' : 'NewTestament';
-  
-        if (Bible_Books[testament].includes(apiBook.name)) {
-          // Add book details to the book
-          Bible_Books[testament][apiBook.name] = {
+      const response = await fetch(`https://api.scripture.api.bible/v1/bibles/${this.BibleVersionID}/books`, {
+        headers: {
+          "API-Key": this.API_KEY,
+        },
+      });
+      const data = await response.json();
+      const apiBooks = data.data;
+
+      // Add book details to the book
+      for (let bibleBookID in Bible_Books.OldTestament) {
+        const apiBook = apiBooks.find(book => book.name === bibleBookID);
+        if (apiBook) {
+
+          Bible_Books.OldTestament[bibleBookID] = {
+            id: apiBook.id,
+            abbreviation: apiBook.abbreviation,
+            name: apiBook.name,
+            nameLong: apiBook.nameLong,
+            chapters: {}
+          };
+        }
+      }
+
+      for (let bibleBookID in Bible_Books.NewTestament) {
+        const apiBook = apiBooks.find(book => book.name === bibleBookID);
+        if (apiBook) {
+          Bible_Books.NewTestament[bibleBookID] = {
             id: apiBook.id,
             abbreviation: apiBook.abbreviation,
             name: apiBook.name,
@@ -77,6 +88,7 @@ export default class BibleAPI {
   }
 
   async getChapters(bibleBookID) {
+      console.log("getChapters")
       const endpoint = `/bibles/${this.BibleVersionID}/books/${bibleBookID}/chapters`;
       const data = await this.makeRequest(endpoint);
       // Filter out the intro or other non-numbered chapters.
@@ -84,6 +96,7 @@ export default class BibleAPI {
   }
 
   async getVerses(bibleChapterID) {
+      console.log("getVerses")
       const endpoint = `/bibles/${this.BibleVersionID}/chapters/${bibleChapterID}/verses`;
       const data = await this.makeRequest(endpoint);
       return data.data.map(({ id }) => ({ id }));
@@ -91,18 +104,18 @@ export default class BibleAPI {
 
 
   async getBibleVersions() {
-    const endpoint = "/bibles";
-    const data = await this.makeRequest(endpoint);
-    return data.map(({ name, id, abbreviation, description, language }) => ({
-      name,
-      id,
-      abbreviation,
-      description,
-      language: language.name,
-    }));
+    const response = await fetch('https://api.scripture.api.bible/v1/bibles', {
+            headers: {
+                'API-Key': this.API_KEY
+            }
+        });
+        const data = await response.json();
+        const versions = data.data;
+        return versions;
   }
 
   getBookId(bookName, finalData) {
+    console.log("getBookId")
     // Check in Old Testament
     if (finalData.OldTestament[bookName]) {
       return finalData.OldTestament[bookName].id;
@@ -120,7 +133,7 @@ export default class BibleAPI {
   
   async getVerseSelection(bibleVersionID, chapterId, startVerseNum, endVerseNum) {
     const endpoint = `/bibles/${bibleVersionID}/chapters/${chapterId}/verses`;
-
+    console.log("getVerseSelection")
     try {
         const data = await this.makeRequest(endpoint);
         const verses = data.data;
@@ -154,51 +167,45 @@ export default class BibleAPI {
       NewTestament: {},
       Translations: {}
     };
+    
+    // Load translations data.
+    const translations = await this.getBibleVersions();
+    for (const version of translations) {
+      finalData.Translations[version.id] = [version.name, version.abbreviation, version.description, version.language];
+    }
 
-    try {
-      // Load translations data.
-      const translations = await this.getBibleVersions();
-      for (const version of translations) {
-        finalData.Translations[version.id] = [version.name, version.abbreviation, version.description, version.language];
-      }
-  
-      // Load book data and categorize them into Old and New Testament.
-      const books = this.getBooks();
-      for (let book of books.OldTestament) {
-        finalData.OldTestament[book] = {};
-      }
-      for (let book of books.NewTestament) {
-        finalData.NewTestament[book] = {};
-      }
+    // Load book data and categorize them into Old and New Testament.
+    const books = this.getBooks();
+    for (let book of books.OldTestament) {
+      finalData.OldTestament[book] = {};
+    }
+    for (let book of books.NewTestament) {
+      finalData.NewTestament[book] = {};
+    }
 
-      // Load book data for each book
-      finalData = await this.addBookData(finalData);
-  
-      // Load chapter and verse data for each book.
-      for (let testament in finalData) {
-        if (testament !== 'Translations') {
-          for (let bookName in finalData[testament]) {
-            const chapters = await this.getChapters(finalData[testament][bookName].id);
-            for (let chapter of chapters.data) {
-              const verses = await this.getVerses(chapter.id);
-              finalData[testament][bookName].chapters[chapter.number] = verses.data.length;
-            }
+    // Load book data for each book
+    finalData = await this.addBookData(finalData);
+    console.log('included book data', finalData)
+
+    localStorage.setItem("bibleData", JSON.stringify(finalData));
+    return finalData;
+
+    // Load chapter and verse data for each book.
+    for (let testament in finalData) {
+      if (testament !== 'Translations') {
+        for (let bookName in finalData[testament]) {
+          const chapters = await this.getChapters(finalData[testament][bookName].id);
+          for (let chapter of chapters.data) {
+            const verses = await this.getVerses(chapter.id);
+            finalData[testament][bookName].chapters[chapter.number] = verses.data.length;
           }
         }
       }
-  
-      // Cache the data in localStorage.
-      localStorage.setItem("bibleData", JSON.stringify(finalData));
-  
-      return finalData;
-    } catch (error) {
-      console.error("Error fetching Bible data:", error);
-      return {
-        OldTestament: {},
-        NewTestament: {},
-        Translations: {},
-      }; // Return an empty data structure or handle the error as needed.
     }
+  
+    // Cache the data in localStorage.
+    localStorage.setItem("bibleData", JSON.stringify(finalData));
+    return finalData;
   }
 
   LoadMockData() {
@@ -307,15 +314,10 @@ export default class BibleAPI {
   async populateTranslations() {
     const dropdowns = [document.getElementById('t-select-1'), document.getElementById('t-select-2'), document.getElementById('t-select-3')];
 
-    try {
-        const response = await fetch('https://api.scripture.api.bible/v1/bibles', {
-            headers: {
-                'API-Key': this.API_KEY
-            }
-        });
-        const data = await response.json();
-        const translations = data.data;
-
+    // Check if translations are already in local storage
+    const cachedTranslations = localStorage.getItem('translations');
+    if (cachedTranslations) {
+        const translations = JSON.parse(cachedTranslations);
         dropdowns.forEach(dropdown => {
             translations.forEach(translation => {
                 const option = document.createElement('option');
@@ -324,27 +326,70 @@ export default class BibleAPI {
                 dropdown.appendChild(option);
             });
         });
-
-        // Change the selections to stored values if they exist
-        const storedBibleIds = JSON.parse(localStorage.getItem('selectedBibleIds'));
-        if (storedBibleIds) {
-            dropdowns.forEach((dropdown, index) => {
-                dropdown.value = storedBibleIds[index];
-            });
-        }
-    } catch (error) {
-        console.error("Error fetching Bible translations:", error);
+        return;
     }
-}
 
+    try {
+        // Fetch translations
+        const response = await fetch('https://api.scripture.api.bible/v1/bibles', {
+            headers: {
+                'API-Key': this.API_KEY
+            }
+        });
+        const data = await response.json();
+        const translations = data.data;
 
+        // Cache translations in local storage
+        for (const translation of translations) {
+            localStorage.setItem('translations', JSON.stringify(translations));
+        }
 
-async fetchVerseContent(bibleId, book, chapter, verse) {
+        // Populate the dropdowns
+        dropdowns.forEach(dropdown => {
+            translations.forEach(translation => {
+                const option = document.createElement('option');
+                option.value = translation.id;
+                option.textContent = translation.nameLong || translation.name;
+                dropdown.appendChild(option);
+            });
+        });
+      } catch (error) {
+        console.error('Error fetching translations:', error);
+        throw error;
+      }
+  }
 
-  const response = await fetch(`https://api.scripture.api.bible/v1/bibles/${bibleId}/books/${book}/chapters/${chapter}/verses`);
-  const data = await response.json();
-  const verseData = data.data.find(v => v.reference === `${book} ${chapter}:${verse}`);
-  return verseData ? verseData.content : 'Verse not found';
-}
+  async fetchTranslationContent(bibleId, bookId, book, chapter, verse) {
+    // Construct the passage ID
+    const passageId = `${bookId}.${chapter}.${verse}`;
 
+    console.log('Important!', bibleId, passageId)
+    const response = await fetch(`https://api.scripture.api.bible/v1/bibles/${bibleId}/passages/${passageId}`, {
+      headers: {
+        'API-Key': this.API_KEY
+      }
+    });
+    const data = await response.json();
+    const passage = data.data;
+
+    // Create the passage element
+    const passageElement = document.createElement('div');
+    passageElement.classList.add('passage');
+
+    // Create the passage content
+    const passageContent = document.createElement('div');
+    passageContent.classList.add('passage-content');
+
+    // If passage is undefined, verse for this translation is not available
+    if (!passage) {
+      passageContent.textContent = 'Verse not available for this translation.';
+      passageElement.appendChild(passageContent);
+      return passageElement;
+    } else {
+      // Otherwise, add the passage content
+      passageContent.innerHTML = passage.content;
+      passageElement.appendChild(passageContent);
+      return passageElement;
+    }
+  }
 }
