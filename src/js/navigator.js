@@ -10,15 +10,26 @@ class BibleNavigator {
   }
 
   async init() {
-    this.loadLoadingPage();
+    // If on home page, show loading page
+    if (window.location.pathname === '/') {
+      this.loadLoadingPage();
+    }
     // switch to mock data for testing
     // this.bibleData = this.BibleAPI.LoadMockData();
     this.bibleData = await this.BibleAPI.LoadBibleData();
+    this.removeAnimation();
 
     this.bindNavigation();
-
     this.bindEvents();
     this.navigateByURL();
+  }
+
+  removeAnimation() {
+    // remove animation css property from sect-grid3 class
+    const sectGrid3 = document.querySelectorAll('.sect-grid3');
+    sectGrid3.forEach(sect => {
+      sect.style.animation = 'none';
+    });
   }
 
   bindNavigation() {
@@ -106,11 +117,12 @@ class BibleNavigator {
     this.appContent.innerHTML = content;
   }
 
-  loadHomePage() {
+  async loadHomePage() {
+    this.loadLoadingPage();
     this.updateBreadcrumb();
     this.updatePath();
     this.newTestamentBooks = Object.keys(this.bibleData.NewTestament);
-    this.oldTestamentBooks = Object.keys(this.bibleData.OldTestament);
+    this.oldTestamentBooks = await Object.keys(this.bibleData.OldTestament);
     let content = `
       <div class="flex-sect">
         <div class="sect sect-grid3">
@@ -205,7 +217,7 @@ class BibleNavigator {
     this.updateBreadcrumb();
 
     this.appContent.innerHTML = `
-      <div class="sect sect-grid3">
+      <div class="sect sect-grid">
         <h1>${book} Chapter ${chapter}</h1>
           <div class="">
             <div class="spinner-box">
@@ -220,21 +232,18 @@ class BibleNavigator {
       </div>`;
 
     // Get the total number of verses in the chapter
-    const versesData = await this.BibleAPI.getVerses(book, chapter);
+    const countVerses = await this.BibleAPI.getVerseCount(book, chapter);
 
-    // Get the number of verses in the chapter
-    this.verses = Object.keys(versesData);
-    
-
+    // Make an li for each verse
     const content = `
       <div class="sect sect-grid">
       <h1>${book} Chapter ${chapter}</h1>
       
       <ul>
-        ${this.verses
+        ${Array.from({ length: countVerses }, (_, i) => i + 1)
           .map(
             (verse) =>
-              `<li><button class="verse" data-verse="${verse}">${verse + 1}</button></li>`
+              `<li><button class="verse" data-verse="${verse}">${verse}</button></li>`
           )
           .join("")}
       </ul>

@@ -87,42 +87,50 @@ export default class BibleAPI {
     }
   }
 
-  async getVerses(bookName, chapter) {
+  async getVerseCount(bookName, chapter) {
     // from local storage, get bible data
     const cachedData = localStorage.getItem("bibleData");
-    const finalData = JSON.parse(cachedData);
-
     if (!cachedData) {
       console.error("Bible data not found in local storage.");
       return;
     }
-    // Get the book ID
-    const bookId = this.getBookId(bookName, finalData);
-    if (!bookId) {
-      console.error(`Book ID not found for book: ${bookName}`);
-      return;
-    }
-    // append the chapter number to the book ID
-    const bibleChapterID = `${bookId}.${chapter}`;
 
-    // Check if verses are already in local storage
-    const cachedVerses = localStorage.getItem(bibleChapterID);
-    if (cachedVerses) {
-        return JSON.parse(cachedVerses);
-    }
-
-    const response = await fetch(`https://api.scripture.api.bible/v1/bibles/${this.BibleVersionID}/chapters/${bibleChapterID}/verses`, {
+    const finalData = JSON.parse(cachedData);
+    const chapters = finalData.OldTestament[bookName].chapters;
+    const chapterId = chapters[chapter];
+    console.log(chapters, chapterId, Number.isInteger(chapterId));
+    // Check if chapter id is an integer
+    if (!Number.isInteger(chapterId)) {
+      // Get the book ID
+      const bookId = this.getBookId(bookName, finalData);
+      if (!bookId) {
+        console.error(`Book ID not found for book: ${bookName}`);
+        return;
+      }
+      // append the chapter number to the book ID
+      const bibleChapterID = `${bookId}.${chapter}`;
+      // Get the verses from the API
+      const response = await fetch(`https://api.scripture.api.bible/v1/bibles/${this.BibleVersionID}/chapters/${bibleChapterID}/verses`, {
         headers: {
             'API-Key': this.API_KEY
         }
-    });
-    const data = await response.json();
-    const verses = data.data;
+      });
+      const data = await response.json();
+      const verses = data.data;
+      const verseCount = verses.length;
 
-    // Cache verses in local storage
-    localStorage.setItem(bibleChapterID, JSON.stringify(verses));
+      // Update bible data chapter with the verse count
+      finalData.OldTestament[bookName].chapters[chapter] = verseCount;
 
-    return verses;
+      // Cache the updated bible data
+      localStorage.setItem("bibleData", JSON.stringify(finalData));
+
+      console.log(verseCount);
+      return verseCount;
+    } else {
+      console.log(chapters[chapter]);
+      return chapters[chapter];
+    }
   }
 
 
