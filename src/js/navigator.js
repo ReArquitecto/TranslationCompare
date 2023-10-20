@@ -3,15 +3,18 @@ import BibleAPI from "./BibleAPI.js";
 class BibleNavigator {
   constructor() {
     this.apiKey = "d42753bd397e6f90fcaaa710a6dbfbdf";
-
-    // switch between mock data and api data
     this.BibleAPI = new BibleAPI(this.apiKey);
-    // this.bibleData = this.BibleAPI.LoadMockData();
-    this.bibleData = this.BibleAPI.LoadBibleData();
-    console.log('test', this.bibleData)
-
     this.appContent = document.getElementById("app-content");
     this.breadcrumbElement = document.getElementById("breadcrumb");
+    this.init();
+  }
+
+  async init() {
+    this.loadLoadingPage();
+    // switch to mock data for testing
+    // this.bibleData = this.BibleAPI.LoadMockData();
+    this.bibleData = await this.BibleAPI.LoadBibleData();
+
     this.bindNavigation();
 
     this.bindEvents();
@@ -69,12 +72,46 @@ class BibleNavigator {
     }
   }
 
+  loadLoadingPage() {
+    this.updateBreadcrumb();
+    this.updatePath();
+    const content = `
+      <div class="flex-sect">
+        <div class="sect sect-grid3">
+        <h1>Old Testament</h1>
+          <div class="">
+            <div class="spinner-box">
+              <div class="pulse-container">  
+                <div class="pulse-bubble pulse-bubble-1"></div>
+                <div class="pulse-bubble pulse-bubble-2"></div>
+                <div class="pulse-bubble pulse-bubble-3"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="sect sect-grid3">
+        <h1>New Testament</h1>
+          <div class="">
+            <div class="spinner-box">
+              <div class="pulse-container">  
+                <div class="pulse-bubble pulse-bubble-1"></div>
+                <div class="pulse-bubble pulse-bubble-2"></div>
+                <div class="pulse-bubble pulse-bubble-3"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>`;
+    this.appContent.innerHTML = content;
+  }
+
   loadHomePage() {
     this.updateBreadcrumb();
     this.updatePath();
     this.newTestamentBooks = Object.keys(this.bibleData.NewTestament);
     this.oldTestamentBooks = Object.keys(this.bibleData.OldTestament);
-    const content = `
+    let content = `
       <div class="flex-sect">
         <div class="sect sect-grid3">
         <h1>Old Testament</h1>
@@ -100,9 +137,35 @@ class BibleNavigator {
         </ul>
         </div>
       </div>`;
+      let cont = `
+      <div class="flex-sect">
+        <div class="sect sect-grid3">
+        <h1>Old Testament</h1>
+          <div class="">
+            <div class="spinner-box">
+              <div class="pulse-container">  
+                <div class="pulse-bubble pulse-bubble-1"></div>
+                <div class="pulse-bubble pulse-bubble-2"></div>
+                <div class="pulse-bubble pulse-bubble-3"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="sect sect-grid3">
+        <h1>New Testament</h1>
+        <ul>
+          ${this.newTestamentBooks
+            .map(
+              (book) =>
+                `<li><button class="book" data-book="${book}">${book}</button></li>`
+            )
+            .join("")}
+        </ul>
+        </div>
+      </div>`;
     this.appContent.innerHTML = content;
     this.updateBreadcrumb();
-    // this.updatePath();
   }
 
   loadChaptersPage(book) {
@@ -136,13 +199,32 @@ class BibleNavigator {
     this.appContent.innerHTML = content;
   }
 
-  loadVersesPage(book, chapter) {
+  async loadVersesPage(book, chapter) {
     const testament = this.getTestament(book);
     this.updatePath(book, chapter);
     this.updateBreadcrumb();
 
-    const totalVerses = this.bibleData[testament][book].chapters[chapter];
-    this.verses = Array.from({ length: totalVerses }, (_, i) => i + 1);
+    this.appContent.innerHTML = `
+      <div class="sect sect-grid3">
+        <h1>${book} Chapter ${chapter}</h1>
+          <div class="">
+            <div class="spinner-box">
+              <div class="pulse-container">  
+                <div class="pulse-bubble pulse-bubble-1"></div>
+                <div class="pulse-bubble pulse-bubble-2"></div>
+                <div class="pulse-bubble pulse-bubble-3"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>`;
+
+    // Get the total number of verses in the chapter
+    const versesData = await this.BibleAPI.getVerses(book, chapter);
+
+    // Get the number of verses in the chapter
+    this.verses = Object.keys(versesData);
+    
 
     const content = `
       <div class="sect sect-grid">
@@ -152,7 +234,7 @@ class BibleNavigator {
         ${this.verses
           .map(
             (verse) =>
-              `<li><button class="verse" data-verse="${verse}">${verse}</button></li>`
+              `<li><button class="verse" data-verse="${verse}">${verse + 1}</button></li>`
           )
           .join("")}
       </ul>

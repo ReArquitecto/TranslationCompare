@@ -33,10 +33,10 @@ export default class BibleAPI {
   getBooks() {
     const Bible_Books = {
       OldTestament: [
-        "Genesis", "Exodus", "Leviticus", "Numbers", "Deuteronomy", "Joshua", "Judges", "Ruth", "1 Samuel", "2 Samuel", "1 Kings", "2 Kings", "1 Chronicles", "2 Chronicles", "Ezra", "Nehemiah", "Esther", "Job", "Psalm", "Proverbs", "Ecclesiastes", "Song of Solomon", "Isaiah", "Jeremiah", "Lamentations", "Ezekiel", "Daniel", "Hosea", "Joel", "Amos", "Obadiah", "Jonah", "Micah", "Nahum", "Habakkuk", "Zephaniah", "Haggai", "Zechariah", "Malachi"
+        "Genesis", "Exodus", "Leviticus", "Numbers", "Deuteronomy", "Joshua", "Judges", "Ruth", "1 Samuel", "2 Samuel", "1 Kings", "2 Kings", "1 Chronicles", "2 Chronicles", "Ezra", "Nehemiah", "Esther", "Job", "Psalms", "Proverbs", "Ecclesiastes", "Song of Solomon", "Isaiah", "Jeremiah", "Lamentations", "Ezekiel", "Daniel", "Hosea", "Joel", "Amos", "Obadiah", "Jonah", "Micah", "Nahum", "Habakkuk", "Zephaniah", "Haggai", "Zechariah", "Malachi"
       ],
       NewTestament: [
-        "Matthew", "Mark", "Luke", "John", "Acts", "Romans", "1 Corinthians", "2 Corinthians", "Galatians", "Ephesians", "Phillipians", "Colossians", "1 Thessalonians", "2 Thessalonians", "1 Timothy", "2 Timothy", "Titus", "Philemon", "Hebrews", "James", "1 Peter", "2 Peter", "1 John", "2 John", "3 John", "Jude", "Revelation"
+        "Matthew", "Mark", "Luke", "John", "Acts", "Romans", "1 Corinthians", "2 Corinthians", "Galatians", "Ephesians", "Philippians", "Colossians", "1 Thessalonians", "2 Thessalonians", "1 Timothy", "2 Timothy", "Titus", "Philemon", "Hebrews", "James", "1 Peter", "2 Peter", "1 John", "2 John", "3 John", "Jude", "Revelation"
       ]
     }
     return Bible_Books;
@@ -87,19 +87,42 @@ export default class BibleAPI {
     }
   }
 
-  async getChapters(bibleBookID) {
-      console.log("getChapters")
-      const endpoint = `/bibles/${this.BibleVersionID}/books/${bibleBookID}/chapters`;
-      const data = await this.makeRequest(endpoint);
-      // Filter out the intro or other non-numbered chapters.
-      return data.data.filter(chapter => chapter.number !== 'intro').map(({ number, id }) => ({ number, id }));
-  }
+  async getVerses(bookName, chapter) {
+    // from local storage, get bible data
+    const cachedData = localStorage.getItem("bibleData");
+    const finalData = JSON.parse(cachedData);
 
-  async getVerses(bibleChapterID) {
-      console.log("getVerses")
-      const endpoint = `/bibles/${this.BibleVersionID}/chapters/${bibleChapterID}/verses`;
-      const data = await this.makeRequest(endpoint);
-      return data.data.map(({ id }) => ({ id }));
+    if (!cachedData) {
+      console.error("Bible data not found in local storage.");
+      return;
+    }
+    // Get the book ID
+    const bookId = this.getBookId(bookName, finalData);
+    if (!bookId) {
+      console.error(`Book ID not found for book: ${bookName}`);
+      return;
+    }
+    // append the chapter number to the book ID
+    const bibleChapterID = `${bookId}.${chapter}`;
+
+    // Check if verses are already in local storage
+    const cachedVerses = localStorage.getItem(bibleChapterID);
+    if (cachedVerses) {
+        return JSON.parse(cachedVerses);
+    }
+
+    const response = await fetch(`https://api.scripture.api.bible/v1/bibles/${this.BibleVersionID}/chapters/${bibleChapterID}/verses`, {
+        headers: {
+            'API-Key': this.API_KEY
+        }
+    });
+    const data = await response.json();
+    const verses = data.data;
+
+    // Cache verses in local storage
+    localStorage.setItem(bibleChapterID, JSON.stringify(verses));
+
+    return verses;
   }
 
 
@@ -115,7 +138,6 @@ export default class BibleAPI {
   }
 
   getBookId(bookName, finalData) {
-    console.log("getBookId")
     // Check in Old Testament
     if (finalData.OldTestament[bookName]) {
       return finalData.OldTestament[bookName].id;
@@ -133,7 +155,6 @@ export default class BibleAPI {
   
   async getVerseSelection(bibleVersionID, chapterId, startVerseNum, endVerseNum) {
     const endpoint = `/bibles/${bibleVersionID}/chapters/${chapterId}/verses`;
-    console.log("getVerseSelection")
     try {
         const data = await this.makeRequest(endpoint);
         const verses = data.data;
@@ -182,22 +203,27 @@ export default class BibleAPI {
     for (let book of books.NewTestament) {
       finalData.NewTestament[book] = {};
     }
-
+    
     // Load book data for each book
     finalData = await this.addBookData(finalData);
-    console.log('included book data', finalData)
-
-    localStorage.setItem("bibleData", JSON.stringify(finalData));
-    return finalData;
-
-    // Load chapter and verse data for each book.
+    
+    // Load chapter data for each book.
     for (let testament in finalData) {
       if (testament !== 'Translations') {
         for (let bookName in finalData[testament]) {
-          const chapters = await this.getChapters(finalData[testament][bookName].id);
-          for (let chapter of chapters.data) {
-            const verses = await this.getVerses(chapter.id);
-            finalData[testament][bookName].chapters[chapter.number] = verses.data.length;
+          const bookId = finalData[testament][bookName].id;
+          const response = await fetch(`https://api.scripture.api.bible/v1/bibles/${this.BibleVersionID}/books/${bookId}/chapters`, {
+            headers: {
+              "API-Key": this.API_KEY,
+            },
+          });
+          const data = await response.json();
+          const chapters = data.data;
+          for (let chapter of chapters) {
+            // Add the chapter number and ID to the final data. Exclude intro chapters.
+            if (chapter.number !== 'intro') {
+              finalData[testament][bookName].chapters[chapter.number] = chapter.id;
+            }
           }
         }
       }
@@ -363,7 +389,6 @@ export default class BibleAPI {
     // Construct the passage ID
     const passageId = `${bookId}.${chapter}.${verse}`;
 
-    console.log('Important!', bibleId, passageId)
     const response = await fetch(`https://api.scripture.api.bible/v1/bibles/${bibleId}/passages/${passageId}`, {
       headers: {
         'API-Key': this.API_KEY
