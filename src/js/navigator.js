@@ -44,8 +44,9 @@ class BibleNavigator {
 
   navigateByURL() {
     let { book, chapter, verse } = this.getURLParams();
-    book = this.formatBook(book) || null;
+    console.log(book, chapter, verse)
     const testament = this.getTestament(book);
+    console.log('testament', testament)
     this.redirectIfInvalid();
 
     book = this.unformatBook(book) || null;
@@ -63,12 +64,16 @@ class BibleNavigator {
   formatBook(book) {
     if (!book) return null;
     // lowercase all characters
-    // capitalize first letter of each word
     // replace space with dash
+    // capitalize first letter of every word separated by dash
+    // uncapitalize articles, conjunctions, and prepositions (a, an, and, as, at, but, by, for, if, in, of, on, or, the, to, nor)
     return book
       .toLowerCase()
-      .replace(/\b[a-z]/g, (char) => char.toUpperCase())
-      .replace(/\s/g, "-");
+      .replace(/ /g, "-")
+      .replace(/(^\w|-\w)/g, (m) => m.toUpperCase())
+      .replace(/(A-|An-|And-|As-|At-|But-|By-|For-|If-|In-|Of-|On-|Or-|-The-|To-|Nor-)/g, (m) =>
+        m.toLowerCase()
+      );
   }
   unformatBook(book) {
     if (!book) return null;
@@ -87,6 +92,8 @@ class BibleNavigator {
     } else {
       window.history.pushState({}, "", `/`);
     }
+    console.log("State pushed", book, chapter, verse);
+    console.log("active history state: ", window.history.state);
   }
 
   loadLoadingPage() {
@@ -187,6 +194,8 @@ class BibleNavigator {
   }
 
   loadChaptersPage(book) {
+    //replace dashes with spaces
+    book = this.unformatBook(book) || null;
     const testament = this.getTestament(book);
     if (!testament) {
       console.error(`Unable to determine testament for the book: ${book}`);
@@ -238,6 +247,7 @@ class BibleNavigator {
       </div>`;
 
     // Get the total number of verses in the chapter
+    console.log('book name for verse count', book, chapter, this.bibleData[testament][book].chapters[chapter])
     const countVerses = await this.BibleAPI.getVerseCount(book, chapter);
 
     // Make an li for each verse
@@ -405,17 +415,24 @@ class BibleNavigator {
   }
 
   getURLParams() {
-    const pathSegments = window.location.pathname.split("/").filter(Boolean); // split by "/" and remove any empty parts
+    const pathSegments = window.location.pathname.split("/").filter(Boolean);
+
+    let book = pathSegments[0] || null;
+    const chapter = pathSegments[1] || null;
+    const verse = pathSegments[2] || null;
+
+    book = this.formatBook(book) || null;
 
     return {
-      book: pathSegments[0] || null,
-      chapter: pathSegments[1] || null,
-      verse: pathSegments[2] || null,
+      book,
+      chapter,
+      verse,
     };
   }
 
   redirectIfInvalid() {
     let { book, chapter, verse } = this.getURLParams();
+    // book = this.unformatBook(book) || null;
     const testament = this.getTestament(book);
 
     // Redirect to home page if the book, chapter, or verse does not exist.
