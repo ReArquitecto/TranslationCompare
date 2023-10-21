@@ -14,6 +14,7 @@ class BibleNavigator {
     if (window.location.pathname === '/') {
       this.loadLoadingPage();
     }
+
     // switch to mock data for testing
     // this.bibleData = this.BibleAPI.LoadMockData();
     this.bibleData = await this.BibleAPI.LoadBibleData();
@@ -34,6 +35,11 @@ class BibleNavigator {
 
   bindNavigation() {
     window.addEventListener("popstate", () => this.navigateByURL());
+    //log a list of the active history events
+    if (window.history && window.history.state) {
+      console.log("active history state: ", window.history.state);
+    }
+    
   }
 
   navigateByURL() {
@@ -256,7 +262,7 @@ class BibleNavigator {
     this.updateBreadcrumb();
     const content = `
       <div class="sect sect-translation">
-        <h1>${book} Chapter ${chapter}:${verse}</h1>
+        <h1>${book} ${chapter}:${verse}</h1>
         <div class="info"><img src="/img/info.svg" alt="info icon" class="info-icon"><p>Translation Info<p></div>
         <div class="hidden gray">
           <p>Some Popular Bibles not included:
@@ -288,7 +294,7 @@ class BibleNavigator {
       await this.BibleAPI.populateTranslations();
     }
     catch (error) {
-      console.log('Sequence error: ', error);
+      console.error('Sequence error: ', error);
     }
     await this.loadDropdownDefaultValues();
     this.attachTranslationEventListeners(book, chapter, verse);

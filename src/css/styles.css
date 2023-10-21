@@ -786,7 +786,7 @@ footer {
 
   background-color: white;
   box-shadow: 0px 3px 12px #ededed;
-  border-radius: 5px;
+  border-radius: 12px;
 }
 .sect-grid3 {
   max-width: 640px;
@@ -845,7 +845,7 @@ footer {
 .translations > div {
   background-color: var(--lg);
   box-shadow: 0px 2px 2px #ededed;
-  border-radius: 5px;
+  border-radius: 12px;
   padding: 14px;
   width: 29%;
   /* min-width: 300px; */
@@ -967,13 +967,17 @@ select:hover {
 
 /* Loading */
 .spinner-box {
-  width: 640px;
+  width: 100%;
   height: 120px;
   margin-bottom: 24px;
   display: flex;
   justify-content: center;
   align-items: center;
   background-color: transparent;
+}
+
+.sect-grid3 .spinner-box {
+  width: 640px;
 }
 .pulse-container {
   width: 120px;
@@ -1010,12 +1014,12 @@ select:hover {
   }
 }
 @media screen and (max-width: 800px) {
-  .spinner-box {
+  .sect-grid3  .spinner-box {
     width: 420px;
   }
 }
 @media screen and (max-width: 600px) {
-  .spinner-box {
+  .sect-grid3 .spinner-box {
     width: 100%;
     height: 100px;
   }

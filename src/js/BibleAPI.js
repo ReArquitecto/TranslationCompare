@@ -96,9 +96,16 @@ export default class BibleAPI {
     }
 
     const finalData = JSON.parse(cachedData);
-    const chapters = finalData.OldTestament[bookName].chapters;
+    // Get testament
+    if (finalData.OldTestament[bookName]) {
+      var testament = 'OldTestament';
+    }
+    if (finalData.NewTestament[bookName]) {
+      var testament = 'NewTestament';
+    }
+
+    const chapters = finalData[testament][bookName].chapters;
     const chapterId = chapters[chapter];
-    console.log(chapters, chapterId, Number.isInteger(chapterId));
     // Check if chapter id is an integer
     if (!Number.isInteger(chapterId)) {
       // Get the book ID
@@ -120,15 +127,12 @@ export default class BibleAPI {
       const verseCount = verses.length;
 
       // Update bible data chapter with the verse count
-      finalData.OldTestament[bookName].chapters[chapter] = verseCount;
+      finalData[testament][bookName].chapters[chapter] = verseCount;
 
       // Cache the updated bible data
       localStorage.setItem("bibleData", JSON.stringify(finalData));
-
-      console.log(verseCount);
       return verseCount;
     } else {
-      console.log(chapters[chapter]);
       return chapters[chapter];
     }
   }
