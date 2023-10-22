@@ -1082,6 +1082,10 @@ select:hover {
   .sect-grid3 ul li button {
     width: 100%;
   }
+
+  .chat {
+    text-align: center;
+  }
 }
 
 /* Loading */
