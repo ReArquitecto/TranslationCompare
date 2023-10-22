@@ -1023,8 +1023,8 @@ select:hover {
 
 @media screen and (max-width: 850px) {
   .sect-translation {
-    margin-left: 10%;
-    margin-right: 10%;
+    margin-left: 3%;
+    margin-right: 3%;
     padding: 24px 4%;
   }
   .translations {
@@ -1036,6 +1036,9 @@ select:hover {
     margin-bottom: 10px;
     padding: 4%;
   }
+  #breadcrumb {
+    margin-left: 4%;
+  }
 }
 
 @media screen and (max-width: 800px) {
@@ -1046,8 +1049,8 @@ select:hover {
 
 @media screen and (max-width: 700px) {
   .sect-grid {
-    margin-left: 10%;
-    margin-right: 10%;
+    margin-left: 3%;
+    margin-right: 3%;
     padding: 24px 4%;
   }
   .sect-grid ul {
@@ -1055,8 +1058,8 @@ select:hover {
     gap: 10px;
   }
   .sect-translation {
-    margin-left: 10%;
-    margin-right: 10%;
+    margin-left: 3%;
+    margin-right: 3%;
     padding: 24px 4%;
   }
 }
@@ -1072,8 +1075,8 @@ select:hover {
   .sect-grid3 {
     max-width: 80%;
     width: 80%;
-    margin-left: 10%;
-    margin-right: 10%;
+    margin-left: 3%;
+    margin-right: 3%;
     padding: 24px 5%;
   }
   .sect-grid3 ul li button {
