@@ -2,9 +2,11 @@ import BibleAPI from "./BibleAPI.js";
 
 class BibleNavigator {
   constructor() {
-    this.apiKey = "d42753bd397e6f90fcaaa710a6dbfbdf";
-    this.BibleAPI = new BibleAPI(this.apiKey);
+    this.BibleAPIKey = "d42753bd397e6f90fcaaa710a6dbfbdf";
+    this.BibleAPI = new BibleAPI(this.BibleAPIKey);
+    this.ChatAPIKey = "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";
     this.appContent = document.getElementById("app-content");
+    this.isChatEnabled = true;
     this.breadcrumbElement = document.getElementById("breadcrumb");
     this.init();
   }
@@ -37,7 +39,7 @@ class BibleNavigator {
     window.addEventListener("popstate", () => this.navigateByURL());
     //log a list of the active history events
     if (window.history && window.history.state) {
-      console.log("active history state: ", window.history.state);
+      // console.log("active history state: ", window.history.state);
     }
     
   }
@@ -46,7 +48,6 @@ class BibleNavigator {
     let { book, chapter, verse } = this.getURLParams();
     console.log(book, chapter, verse)
     const testament = this.getTestament(book);
-    console.log('testament', testament)
     this.redirectIfInvalid();
 
     book = this.unformatBook(book) || null;
@@ -92,8 +93,8 @@ class BibleNavigator {
     } else {
       window.history.pushState({}, "", `/`);
     }
-    console.log("State pushed", book, chapter, verse);
-    console.log("active history state: ", window.history.state);
+    // console.log("State pushed", book, chapter, verse);
+    // console.log("active history state: ", window.history.state);
   }
 
   loadLoadingPage() {
@@ -298,6 +299,10 @@ class BibleNavigator {
             <div id="t-content-3" class="scripture-styles">Loading...</div>
           </div>
         </div>
+        ${this.isChatEnabled ? `
+        <div class="chat">
+          <button class="chat-button">Compare with ChatGPT</button>
+        </div>` : ''}
       </div>`;
     this.appContent.innerHTML = content;
     try {
@@ -326,6 +331,49 @@ class BibleNavigator {
         hidden.classList.add('hidden');
       }
     });
+
+    // replace button with chat window when button is clicked
+    const chatButton = document.querySelector('.chat-button');
+    chatButton.addEventListener('click', () => {
+      // get rid of chat button
+      chatButton.remove();
+      // add chat window from this.loadChat()
+      this.loadChat();
+    });
+  }
+
+  async loadChat() {
+    const initalChatContent = `
+      <div class="chat-window">
+        <hr>
+        <h2>Chat <span>(Powered by ChatGPT)</span></h2>
+        <div class="chat-body">
+          <div class="chat-message bot-message">
+            <div class="user-circle"><img src=/img/chatgpt.svg></div>
+            <div class="chat-message-bubble">
+              <div class="spinner-box">
+                <div class="pulse-container">  
+                  <div class="pulse-bubble pulse-bubble-1"></div>
+                  <div class="pulse-bubble pulse-bubble-2"></div>
+                  <div class="pulse-bubble pulse-bubble-3"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="chat-footer">
+          <input type="text" placeholder="Ask a question...">
+          <button class="send-button" Title="Send"><img src="/img/send.svg" alt="Send"></button>`
+    // Create chat window template
+    let botMessage = `
+          `
+    let userMessage = `
+          `
+    
+    // Add chat window template to DOM
+    const chatWindow = document.querySelector('.chat');
+    chatWindow.innerHTML = initalChatContent;
+
   }
 
   loadPageNotFound() {
@@ -405,6 +453,7 @@ class BibleNavigator {
   }
 
   getTestament(book) {
+    book = this.unformatBook(book) || null;
     if (this.bibleData.OldTestament[book]) {
       return "OldTestament";
     } else if (this.bibleData.NewTestament[book]) {
