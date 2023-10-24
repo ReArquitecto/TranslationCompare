@@ -349,7 +349,7 @@ class BibleNavigator {
         <h2>Chat <span>(Powered by ChatGPT)</span></h2>
         <div class="chat-body">
           <div class="chat-message bot-message">
-            <div class="user-circle"><img src=/img/chatgpt.svg></div>
+            <div class="user-circle"><img src=/img/chatgpt.svg alt="ChatGPT Logo As Profile Picture"></div>
             <div class="chat-message-bubble">
               <div class="spinner-box">
                 <div class="pulse-container">  
