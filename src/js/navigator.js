@@ -1,10 +1,12 @@
 import BibleAPI from "./BibleAPI.js";
+import ChatAPI from "./ChatAPI.js";
 
 class BibleNavigator {
   constructor() {
     this.BibleAPIKey = "d42753bd397e6f90fcaaa710a6dbfbdf";
     this.BibleAPI = new BibleAPI(this.BibleAPIKey);
     this.ChatAPIKey = "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";
+    // this.ChatAPI = new ChatAPI(this.ChatAPIKey);
     this.appContent = document.getElementById("app-content");
     this.isChatEnabled = true;
     this.breadcrumbElement = document.getElementById("breadcrumb");
@@ -351,6 +353,7 @@ class BibleNavigator {
           <div class="chat-message bot-message">
             <div class="user-circle"><img src=/img/chatgpt.svg alt="ChatGPT Logo As Profile Picture"></div>
             <div class="chat-message-bubble">
+              <p>Loading Initial Response... This Chatbot disabled. The API Key was exposed on GitHub.</p>
               <div class="spinner-box">
                 <div class="pulse-container">  
                   <div class="pulse-bubble pulse-bubble-1"></div>
@@ -366,13 +369,38 @@ class BibleNavigator {
           <button class="send-button" Title="Send"><img src="/img/send.svg" alt="Send"></button>`
     // Create chat window template
     let botMessage = `
-          `
+      <div class="user-circle"><img src=/img/chatgpt.svg alt="ChatGPT Logo As Profile Picture"></div>
+      <div class="chat-message-bubble">
+        <div class="spinner-box">
+          <div class="pulse-container">  
+            <div class="pulse-bubble pulse-bubble-1"></div>
+            <div class="pulse-bubble pulse-bubble-2"></div>
+            <div class="pulse-bubble pulse-bubble-3"></div>
+          </div>
+        </div>
+      </div>`
     let userMessage = `
-          `
+      <div class="user-circle"><img src=/img/user.svg alt="User Profile Picture"></div>
+      <div class="chat-message-bubble">
+        <p></p>
+      </div>`
     
     // Add chat window template to DOM
     const chatWindow = document.querySelector('.chat');
     chatWindow.innerHTML = initalChatContent;
+
+    return;
+    // Get the verses text and translation names from the selected translations
+    const dropdowns = ['t-select-1', 't-select-2', 't-select-3'].map(id => document.getElementById(id));
+    const contentDivs = ['t-content-1', 't-content-2', 't-content-3'].map(id => document.getElementById(id));
+    const selectedVerses = await contentDivs.map(contentDiv => contentDiv.innerText);
+    const selectedTranslations = await dropdowns.map(dropdown => dropdown.options[dropdown.selectedIndex].text);
+
+    // Get the verse text and translation names from the selected translations
+    const verseText = await selectedVerses.join(' ');
+    const translationNames = await selectedTranslations.join(', ');
+
+    
 
   }
 

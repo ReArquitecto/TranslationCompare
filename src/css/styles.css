@@ -1024,16 +1024,19 @@ select:hover {
   margin-bottom: 20px;
 }
 .chat-message-bubble {
+  box-sizing: border-box;
+  padding: 3px 23px;
   display: block;
   width: 80%;
   margin-top: 5px;
-  color: white;
-  border-radius: 5px;
+  color: var(--dark);
+  text-align: left;
+  border-radius: 20px;
   background-color: var(--lg);
 }
 .chat-message-bubble .spinner-box {
   width: 100%;
-  margin-bottom: 0px;
+  margin-bottom: 40px;
 }
 
 @media screen and (max-width: 850px) {
